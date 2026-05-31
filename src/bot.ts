@@ -352,11 +352,37 @@ bot.on("callback_query:data", async (ctx) => {
       }
 
       await ctx.answerCallbackQuery();
-      // Send the photo file as a raw document (uncompressed)
-      await ctx.replyWithDocument(entry.photoFileId, {
-        caption: "📥 <b>High-Resolution Profile Photo</b> (Uncompressed)",
-        parse_mode: "HTML"
-      });
+
+      try {
+        // Resolve the download URL path from Telegram API
+        const file = await ctx.api.getFile(entry.photoFileId);
+        const filePath = file.file_path;
+        if (!filePath) throw new Error("Empty file path returned from Telegram");
+
+        // Download the raw image binary into memory
+        const downloadUrl = `https://api.telegram.org/file/bot${config.BOT_TOKEN}/${filePath}`;
+        const response = await fetch(downloadUrl);
+        if (!response.ok) throw new Error("Failed to download image file");
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Upload and send as a fresh, uncompressed document file
+        await ctx.replyWithDocument(
+          new InputFile(buffer, "profile_photo.jpg"),
+          {
+            caption: "📥 <b>High-Resolution Profile Photo</b> (Uncompressed File)",
+            parse_mode: "HTML"
+          }
+        );
+      } catch (dlError) {
+        console.error("Failed to download and send photo as document, falling back to photo transfer:", dlError);
+        // Fallback: send as standard photo if document server transfer fails
+        await ctx.replyWithPhoto(entry.photoFileId, {
+          caption: "📥 <b>High-Resolution Profile Photo</b>\n\n<i>⚠️ Note: Could not render as uncompressed document, sent as standard photo instead.</i>",
+          parse_mode: "HTML"
+        });
+      }
     }
   } catch (error) {
     console.error("Error in callback query:", error);
