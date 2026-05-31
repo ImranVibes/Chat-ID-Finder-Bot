@@ -1,0 +1,30 @@
+{
+  "name": "chat-id-finder-bot",
+  "version": "1.0.0",
+  "description": "A high-performance and beautiful Telegram Bot to find chat, user, channel, and bot IDs.",
+  "main": "dist/bot.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/bot.ts",
+    "build": "tsc",
+    "start": "node dist/bot.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "grammy",
+    "chat-id",
+    "typescript"
+  ],
+  "author": "Antigravity & Pair-Partner",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "grammy": "^1.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}
