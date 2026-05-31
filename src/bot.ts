@@ -114,7 +114,8 @@ bot.command("start", async (ctx) => {
 
     // Follow-up message containing the persistent bottom keyboard
     await ctx.reply(
-      "👋 <b>Welcome!</b> Use the keyboard buttons below to find IDs, or forward any message here to inspect its origin.",
+      "👋 <b>Welcome!</b> Use the keyboard buttons below to find IDs, or forward any message here to inspect its origin.\n\n" +
+      "❓ <b>Need help?</b> Click /help to see all features and bot commands!",
       {
         parse_mode: "HTML",
         reply_markup: keyboard
@@ -582,7 +583,8 @@ bot.on("message", async (ctx) => {
     "👋 <b>Welcome to the ID Finder Bot!</b>\n\n" +
     "• Tap one of the buttons below to share a user, bot, group, or channel and instantly find its details.\n" +
     "• Send/forward <b>any Sticker, Photo, Video, GIF, Audio, Document</b> to inspect its metadata.\n" +
-    "• Or <b>forward any standard message here</b> to detect its original sender's ID!",
+    "• Or <b>forward any standard message here</b> to detect its original sender's ID!\n\n" +
+    "❓ <b>Need help?</b> Tap /help to view all features and bot commands!",
     {
       parse_mode: "HTML",
       reply_markup: keyboard
@@ -604,4 +606,16 @@ bot.catch((err) => {
 
 // Start the bot using Long Polling
 console.log("🚀 Premium Chat ID Finder Bot starting up...");
+
+// Register native commands list in Telegram's UI Menu button
+bot.api.setMyCommands([
+  { command: "start", description: "Start the bot and view your profile" },
+  { command: "help", description: "Show bot usage manual, features, and credits" },
+  { command: "inspect", description: "Inspect group details and admin permissions" }
+]).then(() => {
+  console.log("✅ Telegram native menu commands registered successfully!");
+}).catch((err) => {
+  console.error("⚠️ Failed to register Telegram menu commands:", err);
+});
+
 bot.start();
