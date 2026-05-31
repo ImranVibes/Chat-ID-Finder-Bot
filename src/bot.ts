@@ -312,6 +312,17 @@ bot.on("message:chat_shared", async (ctx) => {
   }
 });
 
+// Active locks to prevent double-clicks and concurrent processing
+const processingLocks = new Set<string>();
+
+// Handle ignore clicks on loading buttons
+bot.callbackQuery("fetching_ignore", async (ctx) => {
+  await ctx.answerCallbackQuery({
+    text: "⏳ Please wait, your request is currently processing!",
+    show_alert: false
+  });
+});
+
 // Handle callback queries for inline keyboards (View Raw JSON & Raw Photo Download)
 bot.on("callback_query:data", async (ctx) => {
   try {
@@ -319,6 +330,15 @@ bot.on("callback_query:data", async (ctx) => {
     const [action, cacheId] = data.split(":");
 
     if (action === "raw_json") {
+      const lockKey = `${ctx.chat?.id}:${ctx.callbackQuery.message?.message_id}:raw_json`;
+      if (processingLocks.has(lockKey)) {
+        await ctx.answerCallbackQuery({
+          text: "⏳ Still exporting the JSON payload, please wait...",
+          show_alert: false
+        });
+        return;
+      }
+
       const entry = botCache.get(cacheId);
       if (!entry) {
         await ctx.answerCallbackQuery({
@@ -328,20 +348,47 @@ bot.on("callback_query:data", async (ctx) => {
         return;
       }
 
-      await ctx.answerCallbackQuery();
+      processingLocks.add(lockKey);
+      await ctx.answerCallbackQuery({
+        text: "⚙️ Compiling raw JSON data..."
+      });
 
-      const jsonText = `<pre><code class="language-json">${escapeHTML(entry.json)}</code></pre>`;
-      if (jsonText.length > 4000) {
-        // Send as an in-memory document attachment if payload exceeds Telegram's text limit
-        const buffer = Buffer.from(entry.json, "utf-8");
-        await ctx.replyWithDocument(
-          new InputFile(buffer, "raw_payload.json"),
-          { caption: "⚙️ <b>Raw JSON Payload</b> (Too large for Telegram message limit)", parse_mode: "HTML" }
-        );
-      } else {
-        await ctx.reply(jsonText, { parse_mode: "HTML" });
+      const hasPhoto = !!entry.photoFileId;
+      // Show temporary loading keyboard state
+      const tempKb = new InlineKeyboard()
+        .text("⏳ Fetching JSON...", "fetching_ignore");
+      if (hasPhoto) {
+        tempKb.text("📥 Raw Photo", `raw_photo:${cacheId}`);
+      }
+      await ctx.editMessageReplyMarkup({ reply_markup: tempKb }).catch(() => {});
+
+      try {
+        const jsonText = `<pre><code class="language-json">${escapeHTML(entry.json)}</code></pre>`;
+        if (jsonText.length > 4000) {
+          const buffer = Buffer.from(entry.json, "utf-8");
+          await ctx.replyWithDocument(
+            new InputFile(buffer, "raw_payload.json"),
+            { caption: "⚙️ <b>Raw JSON Payload</b> (Too large for Telegram message limit)", parse_mode: "HTML" }
+          );
+        } else {
+          await ctx.reply(jsonText, { parse_mode: "HTML" });
+        }
+      } finally {
+        processingLocks.delete(lockKey);
+        // Restore original keyboard button state
+        const originalKb = createDetailsKeyboard(cacheId, hasPhoto);
+        await ctx.editMessageReplyMarkup({ reply_markup: originalKb }).catch(() => {});
       }
     } else if (action === "raw_photo") {
+      const lockKey = `${ctx.chat?.id}:${ctx.callbackQuery.message?.message_id}:raw_photo`;
+      if (processingLocks.has(lockKey)) {
+        await ctx.answerCallbackQuery({
+          text: "⏳ Still downloading the photo, please wait...",
+          show_alert: false
+        });
+        return;
+      }
+
       const entry = botCache.get(cacheId);
       if (!entry || !entry.photoFileId) {
         await ctx.answerCallbackQuery({
@@ -351,7 +398,16 @@ bot.on("callback_query:data", async (ctx) => {
         return;
       }
 
-      await ctx.answerCallbackQuery();
+      processingLocks.add(lockKey);
+      await ctx.answerCallbackQuery({
+        text: "📥 Downloading high-resolution photo file from servers..."
+      });
+
+      // Show temporary loading keyboard state
+      const tempKb = new InlineKeyboard()
+        .text("⚙️ View Raw JSON", `raw_json:${cacheId}`)
+        .text("⏳ Fetching raw photo...", "fetching_ignore");
+      await ctx.editMessageReplyMarkup({ reply_markup: tempKb }).catch(() => {});
 
       try {
         // Resolve the download URL path from Telegram API
@@ -382,6 +438,11 @@ bot.on("callback_query:data", async (ctx) => {
           caption: "📥 <b>High-Resolution Profile Photo</b>\n\n<i>⚠️ Note: Could not render as uncompressed document, sent as standard photo instead.</i>",
           parse_mode: "HTML"
         });
+      } finally {
+        processingLocks.delete(lockKey);
+        // Restore original keyboard button state
+        const originalKb = createDetailsKeyboard(cacheId, true);
+        await ctx.editMessageReplyMarkup({ reply_markup: originalKb }).catch(() => {});
       }
     }
   } catch (error) {
