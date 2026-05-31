@@ -21,24 +21,29 @@ export function formatUserProfile(user: {
   is_premium?: boolean;
 }): string {
   const firstName = escapeHTML(user.first_name);
-  const lastName = user.last_name ? escapeHTML(user.last_name) : "<i>None</i>";
+  const lastName = user.last_name ? escapeHTML(user.last_name) : "";
+  const fullName = `${firstName} ${lastName}`.trim();
   const username = user.username ? `@${escapeHTML(user.username)}` : "<i>None</i>";
   const language = user.language_code ? `<code>${escapeHTML(user.language_code)}</code>` : "<i>Unknown</i>";
   const premium = user.is_premium ? "🌟 <b>Premium User</b>" : "👤 <b>Standard User</b>";
   
+  const directLink = user.username 
+    ? `<a href="https://t.me/${user.username}">Open Profile Chat</a>` 
+    : `<a href="tg://user?id=${user.id}">${fullName}</a>`;
+
   return [
     "<b>┌────────────────────────┐</b>",
     "<b>  👤  YOUR PROFILE DETAILS</b>",
     "<b>└────────────────────────┘</b>",
     "",
     `<b>• First Name:</b> ${firstName}`,
-    `<b>• Last Name:</b> ${lastName}`,
+    `<b>• Last Name:</b> ${lastName || "<i>None</i>"}`,
     `<b>• Username:</b> ${username}`,
     `<b>• User ID:</b> <code>${user.id}</code> <i>(tap to copy)</i>`,
     `<b>• Language:</b> ${language}`,
     `<b>• Account Type:</b> ${premium}`,
     "",
-    `🔗 <b>Direct Link:</b> <a href="tg://user?id=${user.id}">Open Profile Chat</a>`
+    `🔗 <b>Direct Link:</b> ${directLink}`
   ].join("\n");
 }
 
@@ -56,6 +61,10 @@ export function formatSharedUser(shared: {
   const fullName = `${firstName} ${lastName}`.trim();
   const username = shared.username ? `@${escapeHTML(shared.username)}` : "<i>None</i>";
 
+  const directLink = shared.username 
+    ? `<a href="https://t.me/${shared.username}">Open Profile Chat</a>` 
+    : `<a href="tg://user?id=${shared.user_id}">${fullName}</a>`;
+
   return [
     "<b>┌────────────────────────┐</b>",
     "<b>  👥  SHARED USER DETAILS</b>",
@@ -65,7 +74,7 @@ export function formatSharedUser(shared: {
     `<b>• Username:</b> ${username}`,
     `<b>• User ID:</b> <code>${shared.user_id}</code> <i>(tap to copy)</i>`,
     "",
-    `🔗 <b>Direct Link:</b> <a href="tg://user?id=${shared.user_id}">Open Profile Chat</a>`
+    `🔗 <b>Direct Link:</b> ${directLink}`
   ].join("\n");
 }
 
@@ -83,6 +92,10 @@ export function formatSharedBot(shared: {
   const fullName = `${firstName} ${lastName}`.trim();
   const username = shared.username ? `@${escapeHTML(shared.username)}` : "<i>None</i>";
 
+  const directLink = shared.username 
+    ? `<a href="https://t.me/${shared.username}">Open Bot Chat</a>` 
+    : `<a href="tg://user?id=${shared.user_id}">${fullName}</a>`;
+
   return [
     "<b>┌────────────────────────┐</b>",
     "<b>  🤖  SHARED BOT DETAILS</b>",
@@ -92,7 +105,7 @@ export function formatSharedBot(shared: {
     `<b>• Username:</b> ${username}`,
     `<b>• Bot ID:</b> <code>${shared.user_id}</code> <i>(tap to copy)</i>`,
     "",
-    `🔗 <b>Direct Link:</b> <a href="tg://user?id=${shared.user_id}">Open Bot Chat</a>`
+    `🔗 <b>Direct Link:</b> ${directLink}`
   ].join("\n");
 }
 

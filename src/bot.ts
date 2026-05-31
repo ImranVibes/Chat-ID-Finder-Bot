@@ -463,17 +463,25 @@ bot.on("message", async (ctx, next) => {
       let formattedText = "";
 
       if (origin.type === "user") {
+        const firstName = escapeHTML(origin.sender_user.first_name);
+        const lastName = origin.sender_user.last_name ? escapeHTML(origin.sender_user.last_name) : "";
+        const fullName = `${firstName} ${lastName}`.trim();
+        
+        const directLink = origin.sender_user.username 
+          ? `<a href="https://t.me/${origin.sender_user.username}">Open Profile Chat</a>` 
+          : `<a href="tg://user?id=${origin.sender_user.id}">${fullName}</a>`;
+
         formattedText = [
           "<b>┌────────────────────────┐</b>",
           "<b>  ➡️  FORWARDED FROM USER</b>",
           "<b>└────────────────────────┘</b>",
           "",
-          `<b>• Name:</b> ${escapeHTML(origin.sender_user.first_name)} ${origin.sender_user.last_name ? escapeHTML(origin.sender_user.last_name) : ""}`.trim(),
+          `<b>• Name:</b> ${fullName}`,
           `<b>• Username:</b> ${origin.sender_user.username ? `@${escapeHTML(origin.sender_user.username)}` : "<i>None</i>"}`,
           `<b>• User ID:</b> <code>${origin.sender_user.id}</code> <i>(tap to copy)</i>`,
           `<b>• Account Type:</b> ${origin.sender_user.is_premium ? "🌟 Premium User" : "👤 Standard User"}`,
           "",
-          `🔗 <b>Direct Link:</b> <a href="tg://user?id=${origin.sender_user.id}">Open Profile Chat</a>`
+          `🔗 <b>Direct Link:</b> ${directLink}`
         ].join("\n");
       } else if (origin.type === "hidden_user") {
         formattedText = [
