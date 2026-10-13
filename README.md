@@ -25,54 +25,59 @@ A high-performance, aesthetically stunning, and feature-rich Telegram Bot built 
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Architecture & Deployment
 
-- **Runtime:** Node.js (v20+)
-- **Language:** TypeScript
-- **Framework:** [grammY](https://grammy.dev/) (Type-safe and modern Telegram Bot API framework)
-- **Execution engine:** `tsx` (TypeScript Execute for zero-compilation hot-reloading)
-- **Environment:** `dotenv` for secure environment variable loading
+The bot supports **Telegram Serverless** directly on Telegram's official infrastructure with zero server maintenance, while maintaining standalone compatibility:
+
+- **Serverless Runtime:** Native Telegram Serverless V8 Isolates (`tgcloud`)
+- **Built-in Database:** Persistent SQLite via `@tgcloud/cli`
+- **Zero-Server Hosting:** Deployed straight to Telegram's cloud — no VPS, no Docker, no Coolify required!
+- **Standalone Runtime (Optional):** Node.js + TypeScript + grammY for self-hosted instances
 
 ---
 
-## 🚀 Getting Started
+## ⚡ Telegram Serverless Deployment (Recommended)
 
-Follow these simple steps to run the bot locally on your computer:
+Run your bot on Telegram's high-speed cloud infrastructure without managing servers:
 
-### 1. Prerequisites
-Ensure you have **Node.js** (v20.0.0 or higher) and **npm** installed on your system.
+### 1. Enable Serverless on Telegram
+1. Open [@BotFather](https://t.me/BotFather) on Telegram.
+2. Select your bot → **Serverless** → turn it **ON**.
+3. Go to **CLI Access** → copy your **Access Token** (`app<id>:<secret>`).
 
-### 2. Clone the Repository
+### 2. Link your local project
+Run the login command in your terminal:
 ```bash
-git clone https://github.com/ImranVibes/Chat-ID-Finder-Bot.git
-cd Chat-ID-Finder-Bot
+npm run login
+# or: npx tgcloud login
+```
+Paste your CLI Access Token when prompted.
+
+### 3. Deploy Code and Apply Database Migrations
+Deploy your modules and run the SQLite schema migration:
+```bash
+npm run deploy     # Deploys modules to Telegram cloud (npx tgcloud push)
+npm run migrate    # Creates the SQLite persistent cache table (npx tgcloud migrate)
 ```
 
-### 3. Install Dependencies
+Your bot is now 100% live on Telegram's serverless cloud!
+
+### 4. Useful Management Commands
+- `npm run status` — Inspect local differences vs deployed cloud modules.
+- `npm run diff` — View line-by-line diffs against the cloud snapshot.
+- `npm run webhook` — Check if your bot webhook is synchronized with deployed handlers.
+- `npm run run handlers/message '{ chat: { id: 1 }, text: "/start" }'` — Test-run handlers server-side without deploying.
+
+---
+
+## 🖥️ Alternative: Running as Standalone Node.js Bot (Self-Hosted)
+
+If you ever wish to run the bot on your own server or VPS using Long Polling:
 ```bash
-npm install
+npm run dev:standalone     # Hot-reloading with tsx
+npm run build:standalone   # Compile TypeScript
+npm run start:standalone   # Start Node.js service
 ```
-
-### 4. Configure Environment Secrets
-1. Create a `.env` file in the root directory (or copy `.env.example`):
-   ```bash
-   cp .env.example .env
-   ```
-2. Open `.env` and set `BOT_TOKEN` to your actual Bot Token from **@BotFather** on Telegram:
-   ```ini
-   BOT_TOKEN=your_telegram_bot_token_here
-   ```
-
-### 5. Run the Bot
-* **Development Mode (Hot-reloading with tsx watch):**
-  ```bash
-  npm run dev
-  ```
-* **Production Mode (Compile to JS and start):**
-  ```bash
-  npm run build
-  npm run start
-  ```
 
 ---
 

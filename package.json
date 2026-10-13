@@ -5,9 +5,16 @@
   "main": "dist/bot.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/bot.ts",
-    "build": "tsc",
-    "start": "node dist/bot.js"
+    "deploy": "tgcloud push",
+    "migrate": "tgcloud migrate",
+    "status": "tgcloud status",
+    "login": "tgcloud login",
+    "diff": "tgcloud diff",
+    "webhook": "tgcloud webhook",
+    "run": "tgcloud run",
+    "dev:standalone": "tsx watch src/bot.ts",
+    "build:standalone": "tsc",
+    "start:standalone": "node dist/bot.js"
   },
   "keywords": [
     "telegram",
@@ -23,6 +30,7 @@
     "grammy": "^1.23.0"
   },
   "devDependencies": {
+    "@tgcloud/cli": "^0.2.0",
     "@types/node": "^20.12.7",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5"
